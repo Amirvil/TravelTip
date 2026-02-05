@@ -18,11 +18,8 @@ window.app = {
     onSetFilterBy,
 }
 
-function sayHello() {
-    console.log('Hello')
-}
+var gUserPos
 
-sayHello()
 
 function onInit() {
     getFilterByFromQueryParams()
@@ -43,12 +40,22 @@ function renderLocs(locs) {
 
     var strHTML = locs.map(loc => {
         const className = (loc.id === selectedLocId) ? 'active' : ''
+        let distanceTo = ''
+        if (gUserPos && loc.geo.lat && loc.geo.lng) {
+            const distance = utilService.getDistance(gUserPos,
+                {
+                    lat: loc.geo.lat,
+                    lng: loc.geo.lng
+                }, 'K')
+            distanceTo = distance
+        }
         return `
         <li class="loc ${className}" data-id="${loc.id}">
             <h4>  
                 <span>${loc.name}</span>
                 <span title="${loc.rate} stars">${'★'.repeat(loc.rate)}</span>
             </h4>
+            <p class="distance">${distanceTo} km away</p>
             <p class="muted">
                 Created: ${utilService.elapsedTime(loc.createdAt)}
                 ${(loc.createdAt !== loc.updatedAt) ?
@@ -75,12 +82,12 @@ function renderLocs(locs) {
 }
 
 function onRemoveLoc(locId) {
-    if(confirm('Are you sure you want to delete this location?')){
+    if (confirm('Are you sure you want to delete this location?')) {
 
         locService.remove(locId)
             .then(() => {
                 flashMsg('Location removed')
-                unDisplayLoc()
+                onDisplayLoc()
                 loadAndRenderLocs()
             })
             .catch(err => {
@@ -136,8 +143,9 @@ function loadAndRenderLocs() {
 function onPanToUserPos() {
     mapService.getUserPosition()
         .then(latLng => {
+            gUserPos = latLng
             mapService.panTo({ ...latLng, zoom: 15 })
-            unDisplayLoc()
+            onDisplayLoc()
             loadAndRenderLocs()
             flashMsg(`You are at Latitude: ${latLng.lat} Longitude: ${latLng.lng}`)
         })
@@ -193,7 +201,7 @@ function displayLoc(loc) {
     utilService.updateQueryParams({ locId: loc.id })
 }
 
-function unDisplayLoc() {
+function onDisplayLoc() {
     utilService.updateQueryParams({ locId: '' })
     document.querySelector('.selected-loc').classList.remove('show')
     mapService.setMarker(null)
