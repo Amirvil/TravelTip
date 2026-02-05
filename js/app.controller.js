@@ -47,7 +47,7 @@ function renderLocs(locs) {
                     lat: loc.geo.lat,
                     lng: loc.geo.lng
                 }, 'K')
-            distanceTo = distance
+            distanceTo = distance + ' km away'
         }
         return `
         <li class="loc ${className}" data-id="${loc.id}">
@@ -55,7 +55,7 @@ function renderLocs(locs) {
                 <span>${loc.name}</span>
                 <span title="${loc.rate} stars">${'★'.repeat(loc.rate)}</span>
             </h4>
-            <p class="distance">${distanceTo} km away</p>
+            <p class="distance">${distanceTo}</p>
             <p class="muted">
                 Created: ${utilService.elapsedTime(loc.createdAt)}
                 ${(loc.createdAt !== loc.updatedAt) ?
