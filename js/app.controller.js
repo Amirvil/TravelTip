@@ -40,22 +40,13 @@ function renderLocs(locs) {
 
     var strHTML = locs.map(loc => {
         const className = (loc.id === selectedLocId) ? 'active' : ''
-        let distanceTo = ''
-        if (gUserPos && loc.geo.lat && loc.geo.lng) {
-            const distance = utilService.getDistance(gUserPos,
-                {
-                    lat: loc.geo.lat,
-                    lng: loc.geo.lng
-                }, 'K')
-            distanceTo = distance + ' km away'
-        }
         return `
         <li class="loc ${className}" data-id="${loc.id}">
             <h4>  
                 <span>${loc.name}</span>
                 <span title="${loc.rate} stars">${'★'.repeat(loc.rate)}</span>
             </h4>
-            <p class="distance">${distanceTo}</p>
+            <p class="distance">${loc.distanceTo ? loc.distanceTo + ' km away' : ''}</p>
             <p class="muted">
                 Created: ${utilService.elapsedTime(loc.createdAt)}
                 ${(loc.createdAt !== loc.updatedAt) ?
@@ -132,7 +123,7 @@ function onAddLoc(geo) {
 }
 
 function loadAndRenderLocs() {
-    locService.query()
+    locService.query(gUserPos)
         .then(renderLocs)
         .catch(err => {
             console.error('OOPs:', err)
@@ -196,6 +187,12 @@ function displayLoc(loc) {
     el.querySelector('.loc-address').innerText = loc.geo.address
     el.querySelector('.loc-rate').innerHTML = '★'.repeat(loc.rate)
     el.querySelector('[name=loc-copier]').value = window.location
+
+    if (gUserPos) {
+        const distance = utilService.getDistance(gUserPos, { lat: loc.geo.lat, lng: loc.geo.lng }, 'K')
+        el.querySelector('.loc-distance').innerText = distance + ' km away'
+    }
+
     el.classList.add('show')
 
     utilService.updateQueryParams({ locId: loc.id })

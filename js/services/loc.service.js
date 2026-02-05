@@ -33,7 +33,7 @@ export const locService = {
     getLocCountByRateMap
 }
 
-function query() {
+function query(userPos) {
     return storageService.query(DB_KEY)
         .then(locs => {
             if (gFilterBy.txt) {
@@ -58,6 +58,15 @@ function query() {
                 locs.sort((p1, p2) => p1.name.localeCompare(p2.name) * gSortBy.name)
             } else if (gSortBy.createdAt !== undefined) {
                 locs.sort((p1, p2) => (p2.createdAt - p1.createdAt) * gSortBy.createdAt)
+            }
+
+            if (userPos){
+                locs = locs.map(loc => {
+                    return {
+                        ...loc,
+                        distanceTo: utilService.getDistance(userPos, {lat: loc.geo.lat, lng: loc.geo.lng}, 'K')
+                    }
+                })
             }
 
             return locs
@@ -144,7 +153,7 @@ function _createDemoLocs() {
                     lat: 28.5096676,
                     lng: 34.5165187,
                     zoom: 11
-                }
+                },
             }
         ]
 
